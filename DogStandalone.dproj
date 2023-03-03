@@ -106,19 +106,22 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <DCCReference Include="Dog.Controller.pas"/>
-        <DCCReference Include="Main.WebModule.pas">
+        <DCCReference Include="WebModule\Main.WebModule.pas">
             <Form>DogRating</Form>
+            <FormType>dfm</FormType>
             <DesignClass>TWebModule</DesignClass>
         </DCCReference>
-        <DCCReference Include="Dog.Entity.pas"/>
-        <DCCReference Include="Data.Connection.pas">
+        <DCCReference Include="Rate\Rate.DAO.pas"/>
+        <DCCReference Include="Dog\Dog.Controller.pas"/>
+        <DCCReference Include="Dog\Dog.DAO.pas"/>
+        <DCCReference Include="Dog\Dog.Entity.pas"/>
+        <DCCReference Include="Model\Data.Connection.pas">
             <Form>DataStream</Form>
+            <FormType>dfm</FormType>
             <DesignClass>TDataModule</DesignClass>
         </DCCReference>
-        <DCCReference Include="Dog.DAO.pas"/>
-        <DCCReference Include="Rate.entity.pas"/>
-        <DCCReference Include="Rate.DAO.pas"/>
+        <DCCReference Include="DataSource\Data.Source.pas"/>
+        <DCCReference Include="Rate\Rate.Entity.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

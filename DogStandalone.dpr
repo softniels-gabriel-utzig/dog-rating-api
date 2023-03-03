@@ -13,13 +13,14 @@ uses
   Web.WebBroker,
   IdContext,
   IdHTTPWebBrokerBridge,
-  Dog.Controller in 'Dog.Controller.pas',
-  Main.WebModule in 'Main.WebModule.pas' {DogRating: TWebModule},
-  Dog.Entity in 'Dog.Entity.pas',
-  Data.Connection in 'Data.Connection.pas' {DataStream: TDataModule},
-  Dog.DAO in 'Dog.DAO.pas',
-  Rate.entity in 'Rate.entity.pas',
-  Rate.DAO in 'Rate.DAO.pas';
+  Main.WebModule in 'WebModule\Main.WebModule.pas' {DogRating: TWebModule},
+  Rate.DAO in 'Rate\Rate.DAO.pas',
+  Dog.Controller in 'Dog\Dog.Controller.pas',
+  Dog.DAO in 'Dog\Dog.DAO.pas',
+  Dog.Entity in 'Dog\Dog.Entity.pas',
+  Data.Connection in 'Model\Data.Connection.pas' {DataStream: TDataModule},
+  Data.Source in 'DataSource\Data.Source.pas',
+  Rate.Entity in 'Rate\Rate.Entity.pas';
 
 {$R *.res}
 
