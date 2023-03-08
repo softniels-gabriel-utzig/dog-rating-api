@@ -20,7 +20,8 @@ uses
   Dog.Entity in 'Dog\Dog.Entity.pas',
   Data.Connection in 'Model\Data.Connection.pas' {DataStream: TDataModule},
   Data.Source in 'DataSource\Data.Source.pas',
-  Rate.Entity in 'Rate\Rate.Entity.pas';
+  Rate.Entity in 'Rate\Rate.Entity.pas',
+  Rating.Entity in 'Rate\Rating.Entity.pas';
 
 {$R *.res}
 

@@ -10,7 +10,8 @@ uses
   Data.Connection,
   Dog.Entity,
   Rate.DAO,
-  Rate.Entity;
+  Rate.Entity,
+  Rating.Entity;
 
 type
   TDogDAO = class
@@ -40,7 +41,7 @@ begin
 
     LSQLQuery.SQL.Add('INSERT INTO dog(id_dog, rate_number, rating, url) ' + //
       'VALUES (:id_dog, :rate_number, :rating, :url)');
-    LSQLQuery.ParamByName('id_dog').AsString   := ADog.IdDog;
+    LSQLQuery.ParamByName('id_dog').AsString       := ADog.IdDog;
     LSQLQuery.ParamByName('rate_number').AsInteger := ADog.RateNumber;
     LSQLQuery.ParamByName('rating').AsCurrency     := ADog.Rating;
     LSQLQuery.ParamByName('url').AsString          := ADog.Url;
@@ -53,44 +54,43 @@ end;
 
 procedure TDogDAO.Rate(AIdDog: String; ARating: Integer);
 var
-  LSQLQuery   : TUniQuery;
-  LRateDAO    : TRateDao;
-  LRateEntity : TRateEntity;
-  LDogEntity  : TDogEntity;
-  LAvarageRate: Currency;
-  LRateNumber: Integer;
+  LSQLQuery  : TUniQuery;
+  LRateDAO   : TRateDao;
+  LRateEntity: TRateEntity;
+  LDogEntity : TDogEntity;
+  LRating    : TRating;
 begin
-  LRateDAO     := nil;
-  LRateEntity  := nil;
-  LDogEntity   := nil;
-  LAvarageRate := 0.0;
-  LRateNumber  := 0;
+  LRateDAO    := nil;
+  LRateEntity := nil;
+  LDogEntity  := nil;
+  LRating     := nil;
+  LSQLQuery   := nil;
+
   if (ARating < 0) OR (ARating > 5) then
     raise Exception.Create('Rating must be between 1 and 5.');
 
   try
-    LRateDAO          := TRateDao.Create(FDataStream);
-    LRateEntity       := TRateEntity.Create;
-    LDogEntity        := self.FindById(AIdApiDog);
+    LDogEntity := self.FindById(AIdDog);
+    if not Assigned(LDogEntity) then
+      raise Exception.Create('Dog not found');
+
+    LRateDAO    := TRateDao.Create(FDataStream);
+    LRateEntity := TRateEntity.Create;
+
     LRateEntity.Rate  := ARating;
     LRateEntity.IdDog := LDogEntity.IdDog;
     LRateDAO.Insert(LRateEntity);
 
     LSQLQuery            := TUniQuery.Create(nil);
     LSQLQuery.Connection := FDataStream.con;
-    LRateDAO.GetDogRating(LDogEntity.IdDog);
 
-    LSQLQuery.ParamByName('dog_id').AsInteger := LDogEntity.IdDog;
-    LSQLQuery.Execute;
-    LSQLQuery.Open;
-    LRateNumber := LSQLQuery.FieldByName('COUNT(id_rate)').AsInteger;
-    LAvarageRate := LSQLQuery.FieldByName('AVG(rate)').AsCurrency;
-    LSQLQuery.SQL.Clear;
-    LSQLQuery.SQL.Add('UPDATE dog SET rate_number = :rate_number, rating = :rating ' + //
-      'WHERE id_dog = :id_dog');
-    LSQLQuery.ParamByName('id_dog').AsInteger  := LDogEntity.IdDog;
-    LSQLQuery.ParamByName('rating').AsCurrency := LAvarageRate;
-    LSQLQuery.ParamByName('rate_number').AsInteger := LRateNumber;
+    LSQLQuery.SQL.Add('UPDATE dog SET rate_number = :rate_number, rating = :rating WHERE id_dog = :id_dog');
+
+    LRating := LRateDAO.GetDogRating(AIdDog);
+
+    LSQLQuery.ParamByName('rating').AsCurrency     := LRating.Rating;
+    LSQLQuery.ParamByName('rate_number').AsInteger := LRating.RateNumber;
+    LSQLQuery.ParamByName('id_dog').AsString       := LDogEntity.IdDog;
 
     LSQLQuery.Execute;
   finally
@@ -106,19 +106,19 @@ begin
   try
     LSQLQuery            := TUniQuery.Create(nil);
     LSQLQuery.Connection := FDataStream.con;
-    LSQLQuery.SQL.Add('SELECT * FROM dog where id_api_dog = :id_api_dog');
-    LSQLQuery.ParamByName('id_api_dog').AsString := AIdApiDog;
+    LSQLQuery.SQL.Add('SELECT * FROM dog where id_dog = :id_dog');
+    LSQLQuery.ParamByName('id_dog').AsString := AIdApiDog;
     LSQLQuery.Execute;
     LSQLQuery.Open;
 
     if LSQLQuery.IsEmpty then
-      raise Exception.Create('Id not Found');
+      exit(nil);
+
     Result            := TDogEntity.Create;
-    Result.IdDog      := LSQLQuery.FieldByName('id_dog').AsInteger;
-    Result.IdApiDog   := LSQLQuery.FieldByName('id_api_dog').AsString;
+    Result.IdDog      := LSQLQuery.FieldByName('id_dog').AsString;
     Result.RateNumber := LSQLQuery.FieldByName('rate_number').AsInteger;
     Result.Rating     := LSQLQuery.FieldByName('rating').AsCurrency;
-    Result.DogUrl     := LSQLQuery.FieldByName('url').AsString;
+    Result.Url        := LSQLQuery.FieldByName('url').AsString;
   finally
     LSQLQuery.Free;
   end;

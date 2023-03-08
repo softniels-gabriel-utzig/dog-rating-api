@@ -7,8 +7,10 @@ uses
   System.Classes,
   System.Generics.Collections,
   Uni,
+  System.JSON,
   Data.Connection,
   Rate.Entity,
+  Rating.Entity,
   Dog.Entity;
 
 type
@@ -17,7 +19,7 @@ type
   public
     constructor Create(ADataStream: TDataStream); overload;
     procedure Insert(ARate: TRateEntity);
-    function GetDogRating(AIdDog: string): TDogEntity;
+    function GetDogRating(AIdDog: string): TRating;
   end;
 
 implementation
@@ -36,8 +38,8 @@ begin
     LSQLQuery            := TUniQuery.Create(nil);
     LSQLQuery.Connection := FDataStream.con;
 
-    LSQLQuery.SQL.Add('INSERT INTO rate(rate, dog_id) ' + //
-      'VALUES (:rate, :dog_id)');
+    LSQLQuery.SQL.Add('INSERT INTO rate(rate, id_dog) ' + //
+      'VALUES (:rate, :id_dog)');
     LSQLQuery.ParamByName('rate').AsInteger  := ARate.Rate;
     LSQLQuery.ParamByName('id_dog').AsString := ARate.IdDog;
 
@@ -47,10 +49,12 @@ begin
   end;
 end;
 
-function TRateDao.GetDogRating(AIdDog: String): TDogEntity;
+function TRateDao.GetDogRating(AIdDog: String): TRating;
 var
   LSQLQuery: TUniQuery;
+  LRating  : TRating;
 begin
+  LRating := nil;
   try
     LSQLQuery            := TUniQuery.Create(nil);
     LSQLQuery.Connection := FDataStream.con;
@@ -61,12 +65,15 @@ begin
 
     if LSQLQuery.IsEmpty then
       raise Exception.Create('Id not Found');
+    LRating := TRating.Create;
 
-    Result := TDogEntity.Create;
-    Result.RateNumber := LSQLQuery.FieldByName('rate_number').AsInteger;
-    Result.Rating := LSQLQuery.FieldByName('rating').AsCurrency;
+    LRating.RateNumber := LSQLQuery.FieldByName('rate_number').AsInteger;
+    LRating.Rating     := LSQLQuery.FieldByName('rating').AsCurrency;
+
+    Result := LRating;
   finally
     LSQLQuery.Free;
+    LRating.Free;
   end;
 end;
 

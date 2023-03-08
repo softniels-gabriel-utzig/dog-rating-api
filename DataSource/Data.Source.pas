@@ -4,55 +4,49 @@ interface
 
 uses
   System.SysUtils,
+  System.Generics.Collections,
   MVCFramework.RESTClient,
-  MVCFramework.RESTClient.Intf,
-  System.JSON,
-  REST.JSON;
+  JSON.Deserializer,
+  dog.DTO;
 
 type
   TDataSoruce = class
-    FAPIClient: TMVCRESTClient;
+  private
+    FAPIClient: IMVCRESTClient;
   Public
-    constructor Create(); overload;
-    function GetDog(): TJSONValue;
+    constructor Create; overload;
+    function GetDogs(ALimit: Integer = 0): TObjectList<TDogDTO>;
     destructor Destroy; override;
   end;
 
 implementation
 
-constructor TDataSoruce.Create();
+constructor TDataSoruce.Create;
 begin
   FAPIClient := TMVCRESTClient.Create;
   FAPIClient.BaseURL('https://api.thedogapi.com/v1/');
 end;
 
-function TDataSoruce.GetDog(): TJSONValue;
+function TDataSoruce.GetDogs(ALimit: Integer = 0): TObjectList<TDogDTO>;
 Var
   LAPIResponse: IMVCRESTResponse;
-  LJSONArray  : TJSONArray;
+
 begin
-  LJSONArray := nil;
-  try
-    LJSONArray := TJSONArray.Create;
+  LAPIResponse := nil;
+  result       := TObjectList<TDogDTO>.Create;
 
-    LAPIResponse := FAPIClient.Get('images/search');
-    if not LAPIResponse.Success then
-      raise Exception.Create('No dogs found =(');
+  LAPIResponse := FAPIClient.Get('images/search/?limit=' + IntToStr(ALimit));
+  if not LAPIResponse.Success then
+    Exit;
 
-    LJSONArray := TJSONArray.Create(TJSONObject.ParseJSONValue(LAPIResponse.Content) as TJSONArray);
-
-    Result := LJSONArray[0];
-  finally
-  end;
+  TComumDeserialize.JSONToObjecList<TDogDTO>(LAPIResponse.Content, result);
 
 end;
 
 destructor TDataSoruce.Destroy;
 begin
   if FAPIClient <> nil then
-    FAPIClient.Free;
-
-  inherited;
+    inherited;
 end;
 
 end.

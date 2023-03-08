@@ -35,6 +35,7 @@ implementation
 
 uses
   System.SysUtils,
+  System.Generics.Collections,
   MVCFramework.Logger,
   System.StrUtils,
   MVCFramework.RESTClient,
@@ -44,7 +45,9 @@ uses
   Data.Connection,
   Dog.DAO,
   Dog.Entity,
-  Data.Source;
+  Dog.DTO,
+  Data.Source,
+  JSON.Deserializer;
 
 procedure TDogs.Index;
 begin
@@ -53,60 +56,52 @@ end;
 
 procedure TDogs.GetDogs;
 var
-  LAPIResponse   : TJSONObject;
+  LDataConnection: TDataStream;
+  LDataSource    : TDataSoruce;
   LDogDAO        : TDogDAO;
   LDogEntity     : TDogEntity;
-  LJsonResponse  : TJSONValue;
-  LDataConnection: TDataStream;
-  ArrayElement   : TJSonValue;
-  LAPISource     : IMVCRESTResponse;
-  LDogSerialized : TJSONObject;
-
-  LDataSource: TDataSoruce;
+  LDogListEntity : TObjectList<TDogEntity>;
+  LDogListDTO    : TObjectList<TDogDTO>;
 
 begin
-  LJsonResponse   := nil;
   LDataConnection := nil;
+  LDataSource     := nil;
   LDogDAO         := nil;
-  LAPIResponse    := nil;
-  LAPISource      := nil;
   LDogEntity      := nil;
-  ArrayElement    := nil;
-
-  LDataSource := nil;
+  LDogListEntity  := nil;
+  LDogListDTO     := nil;
 
   try
     LDataConnection := TDataStream.Create(nil);
-    LDogEntity      := TDogEntity.Create;
-    LDogDAO         := TDogDAO.Create(LDataConnection);
     LDataSource     := TDataSoruce.Create;
+    LDogDAO         := TDogDAO.Create(LDataConnection);
+    LDogEntity      := TDogEntity.Create;
+    LDogListEntity  := TObjectList<TDogEntity>.Create;
+    LDogListDTO     := TObjectList<TDogDTO>.Create;
+    LDogListDTO     := LDataSource.GetDogs;
 
-    if LAPISource.Success then
+    for var Dog in LDogListDTO do
     begin
-      LJsonResponse := TJSONValue.Create;
-      LJsonResponse := LDataSource.GetDog;
-
-      try
-        LDogEntity := LDogDAO.FindById(LJsonResponse.GetValue<string>('id'));
-      except
-        on E: Exception do
-        begin
-          LDogEntity.IdDog   := LJsonResponse.GetValue<string>('id');
-          LDogEntity.Url     := LJsonResponse.GetValue<string>('url');
-          LDogEntity.RateNumber := 0;
-          LDogEntity.Rating     := 0;
-          LDogDAO.Insert(LDogEntity);
-        end;
+      LDogEntity := LDogDAO.FindById(Dog.id);
+      if not Assigned(LDogEntity) then
+      begin
+        LDogEntity            := TDogEntity.Create;
+        LDogEntity.IdDog      := Dog.id;
+        LDogEntity.Url        := Dog.Url;
+        LDogEntity.RateNumber := 0;
+        LDogEntity.Rating     := 0;
+        LDogDAO.Insert(LDogEntity);
       end;
-
-      render(201, LDogEntity);
+      LDogListEntity.add(LDogEntity);
     end;
+
+    render(201, LDogListEntity);
+
   finally
-    LJsonResponse.Free;
-    LDataConnection.Free;
-    LDogDAO.Free;
-    LAPIResponse.Free;
-    ArrayElement.Free;
+    LDataConnection.free;
+    LDogListDTO.free;
+    LDogDAO.free;
+    LDataSource.Destroy;
   end;
 end;
 
@@ -124,32 +119,31 @@ begin
     LDataConnection := TDataStream.Create(nil);
     LDogEntity      := TDogEntity.Create;
     LDogDAO         := TDogDAO.Create(LDataConnection);
-    try
-      LDogEntity := LDogDAO.FindById(id);
+    LDogEntity := LDogDAO.FindById(id);
+    if Assigned(LDogEntity) then
       render(200, LDogEntity)
-    except
-      on E: Exception do
-        render(404, '{"error":"' + E.Message + '"');
-    end;
+    else
+      render(404, '{"error":"Dog not found =("');
+
   finally
-    LDogDAO.Free;
-    LDataConnection.Free;
+    LDogDAO.free;
+    LDataConnection.free;
   end;
 
 end;
 
 procedure TDogs.RateDog(id: String);
 var
-  LRating        : TJSonValue;
   LDataConnection: TDataStream;
   LDogDAO        : TDogDAO;
   LDogEntity     : TDogEntity;
+  LRating        : TJSONValue;
 
 begin
   LDataConnection := nil;
   LDogDAO         := nil;
-  LRating         := nil;
   LDogEntity      := nil;
+  LRating         := nil;
 
   try
     LDataConnection := TDataStream.Create(nil);
@@ -163,6 +157,9 @@ begin
 
     except
       on E: Exception do
+      begin
+        render(400, '{"Error":"'+E.Message+'"}');
+      end;
     end;
   finally
 

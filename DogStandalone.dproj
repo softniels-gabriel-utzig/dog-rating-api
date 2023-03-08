@@ -122,6 +122,7 @@
         </DCCReference>
         <DCCReference Include="DataSource\Data.Source.pas"/>
         <DCCReference Include="Rate\Rate.Entity.pas"/>
+        <DCCReference Include="Rate\Rating.Entity.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

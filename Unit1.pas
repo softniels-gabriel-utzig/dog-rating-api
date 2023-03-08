@@ -1,0 +1,16 @@
+unit Rating.Entity;
+
+interface
+type
+  TRating = record
+    FRateNumber : Integer;
+    FRating : Currency;
+
+  public
+    property RateNumber: Integer read FRateNumber write FRateNumber;
+    property Rating: Currency read FRating write FRating;
+  end;
+
+implementation
+
+end.

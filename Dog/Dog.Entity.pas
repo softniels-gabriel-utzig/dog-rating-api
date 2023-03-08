@@ -1,8 +1,7 @@
 unit Dog.Entity;
 
 interface
-uses
-  MVCFramework.Serializer.Commons;
+
 type TDogEntity = class
   private
     FIdDog: String;
@@ -11,7 +10,6 @@ type TDogEntity = class
     FUrl: String;
     
   public
-    [MVCDoNotSerialize]
     property IdDog: String read FIdDog write FIdDog;
     property RateNumber: Integer read FRateNumber write FRateNumber;
     property Rating: Double read FRating write FRating;
